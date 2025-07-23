@@ -1,0 +1,24 @@
+# Configuração do Streamlit para o SAEV Dashboard
+
+[global]
+# Desabilitar coleta de estatísticas de uso
+gatherUsageStats = false
+
+[server]
+# Configurações do servidor
+port = 8501
+address = "localhost"
+maxUploadSize = 200
+enableXsrfProtection = true
+
+[browser]
+# Configurações do navegador
+gatherUsageStats = false
+
+[theme]
+# Tema customizado
+primaryColor = "#1f77b4"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+font = "sans serif"
