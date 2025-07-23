@@ -1,2 +1,4 @@
 *.csv
+avaliacao_prod.db
+**/avaliacao_prod.db
 
