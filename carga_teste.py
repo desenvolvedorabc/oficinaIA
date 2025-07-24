@@ -1,56 +1,116 @@
-import sqlite3
-import csv
+#!/usr/bin/env python3
+"""
+Script de carga de dados para ambiente de TESTE
+Carrega dados CSV filtrados e anonimizados para o banco SQLite com transformação Star Schema
+"""
 import sys
-import hashlib
+import os
+from pathlib import Path
+
+# Adicionar o diretório src ao path
+sys.path.append(str(Path(__file__).parent / 'src'))
+
+from src.data.etl import SAEVDataProcessor
 
 def carregar_municipios(nome_arquivo):
-    with open(nome_arquivo, encoding='utf-8') as f:
-        # Remove linhas em branco e espaços
-        return set(linha.strip() for linha in f if linha.strip())
-
-def md5_hash(texto):
-    # Retorna o hash MD5 em hexadecimal
-    return hashlib.md5(texto.encode('utf-8')).hexdigest()
-
-def main():
-    if len(sys.argv) < 3:
-        print("Uso: python importa_csv.py arquivo.csv cidade_teste.txt [banco.db]")
+    """Carrega lista de municípios válidos do arquivo"""
+    try:
+        with open(nome_arquivo, encoding='utf-8') as f:
+            # Remove linhas em branco e espaços
+            municipios = set(linha.strip() for linha in f if linha.strip())
+        print(f"📋 Municípios carregados: {len(municipios)}")
+        for municipio in sorted(municipios):
+            print(f"   • {municipio}")
+        return municipios
+    except FileNotFoundError:
+        print(f"❌ Arquivo de municípios não encontrado: {nome_arquivo}")
         sys.exit(1)
 
-    csv_file = sys.argv[1]
-    cidades_file = sys.argv[2]
-    db_file = sys.argv[3] if len(sys.argv) > 3 else "avaliacao_teste.db"
+def main():
+    """Função principal do script de carga de teste"""
+    print("="*80)
+    print("🧪 SAEV - CARGA DE DADOS PARA TESTE (Dados Anonimizados)")
+    print("="*80)
+    
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print("❌ Uso incorreto!")
+        print("📋 Uso: python carga_teste.py cidade_teste.txt [banco.db]")
+        print("📋 Exemplo: python carga_teste.py cidade_teste.txt db/avaliacao_teste.db")
+        print()
+        print("📝 Parâmetros:")
+        print("   📁 Origem: data/raw/ (todos os arquivos CSV)")
+        print("   1️⃣  cidade_teste.txt - Arquivo com lista de cidades para filtrar")
+        print("   2️⃣  banco.db         - Banco de dados de destino (opcional)")
+        print()
+        print("💡 O script processará TODOS os arquivos CSV da pasta data/raw automaticamente")
+        sys.exit(1)
 
+    cidades_file = sys.argv[1]
+    db_file = sys.argv[2] if len(sys.argv) > 2 else "db/avaliacao_teste.db"
+    csv_folder = "data/raw"
+
+    # Verificar se a pasta data/raw existe
+    if not Path(csv_folder).exists():
+        print(f"❌ Pasta de dados não encontrada: {csv_folder}")
+        print("💡 Certifique-se de que a pasta data/raw existe e contém arquivos CSV.")
+        sys.exit(1)
+    
+    # Verificar se há arquivos CSV na pasta
+    csv_files = list(Path(csv_folder).glob("*.csv"))
+    if not csv_files:
+        print(f"❌ Nenhum arquivo CSV encontrado em: {csv_folder}")
+        print("💡 Adicione arquivos CSV na pasta data/raw.")
+        sys.exit(1)
+        
+    if not Path(cidades_file).exists():
+        print(f"❌ Arquivo de cidades não encontrado: {cidades_file}")
+        print("💡 Este arquivo deve conter a lista de municípios para filtrar (um por linha).")
+        print("💡 Exemplo de conteúdo do arquivo:")
+        print("   São Paulo")
+        print("   Rio de Janeiro")
+        print("   Belo Horizonte")
+        sys.exit(1)
+    
+    print(f"📁 Pasta de origem: {csv_folder}")
+    print(f"📄 Arquivos encontrados: {len(csv_files)}")
+    for csv_file in sorted(csv_files):
+        print(f"   • {csv_file.name}")
+    print(f"🏙️  Arquivo de cidades: {cidades_file}")
+    print(f"🗄️  Banco de dados: {db_file}")
+    print()
+    
+    # Carregar municípios válidos
+    print("🏙️  Carregando municípios válidos...")
     municipios_validos = carregar_municipios(cidades_file)
-
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-
-    with open(csv_file, newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        colunas = reader.fieldnames
-
-        # Prepara o comando de insert
-        campos = ','.join(colunas)
-        valores = ','.join(['?' for _ in colunas])
-        insert_sql = f'INSERT INTO avaliacao ({campos}) VALUES ({valores})'
-
-        for row in reader:
-            # Filtra município
-            if row['MUN_NOME'] not in municipios_validos:
-                continue
-
-            # Criptografa o nome do aluno usando MD5
-            row['ALU_NOME'] = md5_hash(row['ALU_NOME'])
-            row['ALU_CPF'] = md5_hash(row['ALU_CPF'])
-            row['MUN_NOME'] = md5_hash(row['MUN_NOME'])
-            row['ESC_NOME'] = md5_hash(row['ESC_NOME'])
-            dados = [row[col] for col in colunas]
-            cursor.execute(insert_sql, dados)
-
-    conn.commit()
-    print(f"Importação concluída para municípios selecionados: {csv_file} → {db_file}")
-    conn.close()
+    print()
+    
+    try:
+        # Criar processador de dados
+        processor = SAEVDataProcessor(db_file)
+        
+        # Executar processo completo de ETL para teste
+        processor.full_etl_process(
+            csv_folder=csv_folder,  # Usar pasta em vez de arquivo único
+            test_mode=True,  # Modo teste com anonimização
+            allowed_cities=list(municipios_validos),
+            apply_star_schema=True,
+            overwrite_db=True
+        )
+        
+        print()
+        print("="*80)
+        print("🎉 CARGA DE TESTE CONCLUÍDA COM SUCESSO!")
+        print(f"📊 Dados anonimizados disponíveis em: {db_file}")
+        print("⭐ Star Schema aplicado para análises otimizadas")
+        print("🔒 Dados sensíveis foram anonimizados com MD5")
+        print("="*80)
+        
+    except Exception as e:
+        print()
+        print("="*80)
+        print(f"💥 ERRO NA CARGA: {e}")
+        print("="*80)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

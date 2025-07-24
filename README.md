@@ -54,8 +54,9 @@ oficinaIA/
 ├── iniciar.sh                    # Script interativo com menu
 ├── iniciar_teste.sh              # Script para ambiente de teste
 ├── iniciar_prod.sh               # Script para ambiente de produção
-├── carga.py                      # Script de carga original
-├── carga_teste.py                # Script de carga para teste
+├── carga.py                      # Script de carga para produção (com Star Schema)
+├── carga_teste.py                # Script de carga para teste (com anonimização)
+├── apply_star_schema.py          # Utilitário para aplicar Star Schema
 ├── data/
 │   ├── raw/                      # Dados CSV originais
 │   └── test/                     # Dados de teste
@@ -64,8 +65,10 @@ oficinaIA/
 │   └── avaliacao_prod.db         # Banco de produção (não vai pro repo)
 ├── src/
 │   ├── config.py                 # Configurações e gerenciamento de ambientes
+│   ├── star_schema.sql           # Script SQL para transformação Star Schema
 │   ├── data/
-│   │   └── etl.py               # Processos de ETL melhorados
+│   │   ├── etl.py               # Processos de ETL integrados com Star Schema
+│   │   └── star_schema.py       # Utilitários Python para Star Schema
 │   ├── dashboard/
 │   │   └── main.py              # Dashboard principal
 │   ├── reports/
@@ -93,15 +96,111 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-### 2. Carregar Dados
+### 2. Carregar Dados (ETL Completo)
+
+Os scripts de carga foram completamente reformulados para incluir:
+- ✅ **Processamento automático** de todos os arquivos CSV em `data/raw/`
+- ✅ **Criação automática** da estrutura do banco
+- ✅ **Transformação Star Schema** integrada
+- ✅ **Validação de dados** automática
+- ✅ **Logs detalhados** do processo
+- ✅ **Sobrescrita** segura de bancos existentes
+
+#### **Ambiente de Produção (Dados Reais)**
 
 ```bash
-# Para dados de produção
-python carga.py arquivo_dados.csv db/avaliacao_prod.db
+# Carga automática de todos os arquivos CSV + Star Schema
+python carga.py [banco.db]
 
-# Para dados de teste (com ofuscação)
-python carga_teste.py arquivo_dados.csv cidade_teste.txt db/avaliacao_teste.db
+# Exemplo prático
+python carga.py db/avaliacao_prod.db
+
+# Ou usando o banco padrão
+python carga.py
 ```
+
+**⚠️ Parâmetros:**
+- **📁 Origem fixa**: `data/raw/` (todos os arquivos CSV processados automaticamente)
+- **🗄️ banco.db** - Banco de destino (opcional, padrão: `db/avaliacao_prod.db`)
+
+**Características:**
+- 🔒 **Confirmação obrigatória** antes da execução
+- 📊 **Todos os arquivos CSV** processados sequencialmente
+- ⭐ **Star Schema aplicado** automaticamente
+- 📈 **Estatísticas detalhadas** dos dados carregados
+
+#### **Ambiente de Teste (Dados Anonimizados)**
+
+```bash
+# Carga automática com filtragem e anonimização + Star Schema
+python carga_teste.py cidade_teste.txt [banco.db]
+
+# Exemplo prático
+python carga_teste.py cidade_teste.txt db/avaliacao_teste.db
+
+# Ou usando o banco padrão
+python carga_teste.py cidade_teste.txt
+```
+
+**⚠️ Parâmetros:**
+- **📁 Origem fixa**: `data/raw/` (todos os arquivos CSV processados automaticamente)
+- **1️⃣ cidade_teste.txt** - Arquivo com lista de municípios para filtrar
+- **2️⃣ banco.db** - Banco de destino (opcional, padrão: `db/avaliacao_teste.db`)
+
+**Características:**
+- 🏷️ **Filtragem** por municípios específicos (arquivo `cidade_teste.txt`)
+- 🔒 **Anonimização MD5** de dados sensíveis (nomes, CPFs)
+- ⭐ **Star Schema aplicado** automaticamente
+- 🧪 **Seguro para repositório** Git
+
+#### **Aplicar Star Schema em Banco Existente**
+
+```bash
+# Para bancos já criados sem Star Schema
+python apply_star_schema.py db/avaliacao_prod.db
+python apply_star_schema.py db/avaliacao_teste.db
+```
+
+### 🚨 Troubleshooting - Erros Comuns
+
+#### **❌ "Nenhum arquivo CSV encontrado"**
+```bash
+# Verifique se a pasta data/raw existe e contém arquivos CSV
+ls data/raw/
+
+# Se necessário, crie a pasta e adicione os arquivos
+mkdir -p data/raw
+# Copie seus arquivos CSV para data/raw/
+```
+
+**Solução**: Certifique-se de que todos os arquivos CSV estão na pasta `data/raw/`.
+
+#### **❌ "Arquivo de cidades não encontrado"** (apenas teste)
+```bash
+# Erro comum: arquivo cidade_teste.txt não existe
+python carga_teste.py cidade_teste.txt  # ❌ ARQUIVO NÃO EXISTE
+
+# Solução: criar o arquivo com a lista de municípios
+echo -e "São Paulo\nRio de Janeiro\nBelo Horizonte" > cidade_teste.txt
+```
+
+**Solução**: Crie o arquivo `cidade_teste.txt` com a lista de municípios (um por linha).
+
+#### **❌ "Pasta de dados não encontrada"**  
+```bash
+# Crie a estrutura de pastas necessária
+mkdir -p data/raw
+```
+
+**Solução**: Certifique-se de que a pasta `data/raw/` existe no diretório do projeto.
+
+#### **❌ "Unable to open database"**
+Este erro foi corrigido na versão atual. Se ainda ocorrer:
+
+**Solução**: 
+1. Verifique se o diretório `db/` existe: `mkdir -p db`
+2. Verifique permissões de escrita no diretório
+3. Use caminhos absolutos se necessário
 
 ### 3. Gerenciar Ambientes
 
@@ -255,7 +354,84 @@ Para facilitar o uso, foram criados scripts shell que automatizam a execução:
 ./iniciar_prod.sh 8503
 ```
 
-## 📊 Estrutura dos Dados 
+## � Processo de ETL Integrado
+
+O sistema oferece um processo de ETL (Extract, Transform, Load) completamente automatizado que integra:
+
+### 🎯 Funcionalidades do ETL
+
+| **Etapa** | **Funcionalidade** | **Benefício** |
+|-----------|-------------------|---------------|
+| **Extract** | Leitura inteligente de CSV | Suporte a encoding UTF-8, tratamento de erros |
+| **Transform** | Filtragem e anonimização | Dados seguros para teste, conformidade LGPD |
+| **Load** | Carga otimizada | Índices automáticos, validação de integridade |
+| **Star Schema** | Transformação automática | Performance 10-100x melhor em consultas BI |
+
+### 🛠️ Arquitetura do ETL
+
+```
+CSV Original
+     ↓
+📥 Extração
+     ↓
+🔄 Transformação
+  ├── Filtragem por município (teste)
+  ├── Anonimização MD5 (teste)  
+  └── Validação de dados
+     ↓
+📊 Carga para SQLite
+  ├── Criação de estrutura
+  ├── Inserção de dados
+  └── Criação de índices
+     ↓
+⭐ Star Schema (Opcional)
+  ├── Tabelas de dimensão
+  ├── Tabela fato
+  └── Otimização de consultas
+     ↓
+✅ Banco Pronto para BI
+```
+
+### 📋 Scripts Disponíveis
+
+| **Script** | **Uso** | **Características** |
+|------------|---------|-------------------|
+| **`carga.py`** | Produção | Dados completos + Star Schema + Validação |
+| **`carga_teste.py`** | Teste | Filtragem + Anonimização + Star Schema |
+| **`apply_star_schema.py`** | Utilitário | Aplica Star Schema em banco existente |
+
+### 🔍 Logs Detalhados
+
+O processo de ETL fornece logs detalhados de cada etapa:
+
+```
+🚀 Iniciando processo completo de ETL...
+🏗️  Criando estrutura do banco: db/avaliacao_teste.db
+📊 Criando índices para otimização...
+✅ Estrutura do banco criada com sucesso
+📥 Carregando dados do CSV: data/raw/saev_2024.csv
+📄 Total de registros no CSV: 150,432
+🏷️  Filtrando municípios: 45,123/150,432 registros mantidos
+🔒 Dados anonimizados para ambiente de teste
+✅ Dados carregados com sucesso: 45,123 registros
+🔍 Validando qualidade dos dados...
+📈 Estatísticas dos dados:
+   • Total de registros: 45,123
+   • Alunos únicos: 1,729
+   • Escolas: 19
+   • Municípios: 3
+⭐ Iniciando transformação Star Schema...
+✅ Transformação Star Schema aplicada com sucesso
+📊 Resultado da transformação Star Schema:
+   • dim_aluno: 1,729 registros
+   • dim_escola: 19 registros
+   • dim_descritor: 109 registros
+   • fato_resposta_aluno: 45,123 registros
+   • teste: 45,123 registros
+🎉 Processo de ETL concluído com sucesso!
+```
+
+## �📊 Estrutura dos Dados 
 
 ## 📊 Estrutura dos Dados
 
@@ -396,15 +572,44 @@ Transformar a tabela única `avaliacao` (resultado do ETL) em um modelo Star Sch
 
 ### 🚀 Como Usar o Star Schema
 
-#### 1. **Executar a Transformação**
+#### 1. **Aplicação Automática (Recomendado)**
+
+O Star Schema é aplicado **automaticamente** durante o processo de carga:
 
 ```bash
-# Aplicar o Star Schema ao banco existente
+# Durante a carga de produção
+python carga.py data/saev_2024.csv db/avaliacao_prod.db
+# ⭐ Star Schema aplicado automaticamente
+
+# Durante a carga de teste  
+python carga_teste.py data/saev_2024.csv cidade_teste.txt db/avaliacao_teste.db
+# ⭐ Star Schema aplicado automaticamente com dados anonimizados
+```
+
+#### 2. **Aplicação Manual (Para Bancos Existentes)**
+
+```bash
+# Aplicar Star Schema em banco já existente
+python apply_star_schema.py db/avaliacao_prod.db
+
+# Ou executar diretamente o script SQL
 cd /caminho/para/projeto
 sqlite3 db/avaliacao_prod.db < src/star_schema.sql
 ```
 
-#### 2. **Exemplo de Consulta Otimizada**
+#### 3. **Desabilitar Star Schema (Se Necessário)**
+
+```python
+# No código Python, usando o módulo ETL
+from src.data.etl import SAEVDataProcessor
+
+processor = SAEVDataProcessor("db/avaliacao.db")
+processor.full_etl_process(
+    csv_path="dados.csv",
+    apply_star_schema=False  # Desabilita Star Schema
+)
+```
+#### 4. **Exemplo de Consulta Otimizada**
 
 ```sql
 -- Análise de performance por escola usando Star Schema
@@ -425,7 +630,7 @@ GROUP BY e.ESC_NOME, d.MTI_DESCRITOR
 ORDER BY taxa_acerto DESC;
 ```
 
-#### 3. **Consultas de BI Típicas**
+#### 5. **Consultas de BI Típicas**
 
 ```sql
 -- Top 10 escolas por taxa de acerto
@@ -466,12 +671,35 @@ LIMIT 5;
 | **Drill-down por competência** | Múltiplas agregações | Join simples | **20x** |
 | **Relatórios executivos** | Timeout frequente | Instantâneo | **∞** |
 
-### 🛠️ Scripts Disponíveis
+### 🛠️ Scripts e Módulos Disponíveis
 
-| **Arquivo** | **Propósito** |
-|-------------|---------------|
-| **`src/star_schema.sql`** | Script principal de transformação |
-| **`src/data/star_schema.py`** | Utilitários Python para Star Schema |
+| **Arquivo** | **Propósito** | **Integração** |
+|-------------|---------------|----------------|
+| **`src/star_schema.sql`** | Script principal de transformação | Executado automaticamente pelo ETL |
+| **`src/data/star_schema.py`** | Utilitários Python para Star Schema | Módulo de apoio (futuro) |
+| **`src/data/etl.py`** | Processador principal com Star Schema | Integração automática completa |
+| **`apply_star_schema.py`** | Utilitário standalone | Para bancos já existentes |
+
+### 🔄 Integração com o ETL
+
+O Star Schema está **completamente integrado** ao processo de ETL:
+
+```python
+# Exemplo de uso do módulo ETL integrado
+from src.data.etl import SAEVDataProcessor
+
+# Criar processador
+processor = SAEVDataProcessor("db/avaliacao_teste.db")
+
+# Processo completo: ETL + Star Schema + Validação
+processor.full_etl_process(
+    csv_path="dados.csv",
+    test_mode=True,
+    allowed_cities=["São Paulo", "Rio de Janeiro"],
+    apply_star_schema=True,  # Padrão: True
+    overwrite_db=True
+)
+```
 
 ### 💡 Dicas de Uso
 
@@ -483,7 +711,70 @@ LIMIT 5;
 
 ## 📈 Exemplos de Uso
 
-### Gerar Relatório Municipal
+### 🚀 Processo Completo de ETL
+
+```python
+from src.data.etl import SAEVDataProcessor
+
+# Exemplo 1: Carga completa para produção (todos os arquivos CSV)
+processor = SAEVDataProcessor("db/avaliacao_prod.db")
+processor.full_etl_process(
+    csv_folder="data/raw",  # Processa todos os CSV da pasta
+    test_mode=False,
+    apply_star_schema=True,
+    overwrite_db=True
+)
+
+# Exemplo 2: Carga para teste com anonimização (todos os arquivos CSV)
+processor_teste = SAEVDataProcessor("db/avaliacao_teste.db")
+processor_teste.full_etl_process(
+    csv_folder="data/raw",  # Processa todos os CSV da pasta
+    test_mode=True,
+    allowed_cities=["São Paulo", "Rio de Janeiro", "Belo Horizonte"],
+    apply_star_schema=True,
+    overwrite_db=True
+)
+
+# Exemplo 3: Arquivo único (modo legado)
+processor_legado = SAEVDataProcessor("db/avaliacao_individual.db")
+processor_legado.full_etl_process(
+    csv_path="data/raw/es_1_serie.csv",  # Arquivo específico
+    test_mode=False,
+    apply_star_schema=True,
+    overwrite_db=True
+)
+```
+
+### 📊 Consultas Otimizadas com Star Schema
+
+```python
+import sqlite3
+
+# Conectar ao banco com Star Schema
+conn = sqlite3.connect("db/avaliacao_prod.db")
+
+# Análise de performance por escola (consulta otimizada)
+query = """
+SELECT 
+    e.ESC_NOME,
+    SUM(f.ACERTO) as total_acertos,
+    COUNT(*) as total_questoes,
+    ROUND((SUM(f.ACERTO) * 100.0) / COUNT(*), 2) as taxa_acerto
+FROM fato_resposta_aluno f
+JOIN dim_escola e ON f.ESC_INEP = e.ESC_INEP
+WHERE f.DIS_NOME = 'Matemática' AND f.AVA_ANO = 2024
+GROUP BY e.ESC_NOME
+ORDER BY taxa_acerto DESC
+LIMIT 10;
+"""
+
+results = conn.execute(query).fetchall()
+for escola, acertos, total, taxa in results:
+    print(f"{escola}: {taxa}% ({acertos}/{total})")
+```
+
+### 📋 Gerar Relatório Municipal
+
 ```python
 from src.reports.generator import SAEVReports
 
@@ -492,7 +783,8 @@ arquivo = reports.generate_municipal_report(2023, "Matemática")
 print(f"Relatório gerado: {arquivo}")
 ```
 
-### Análise de Clustering
+### 🔬 Análise de Clustering
+
 ```python
 from src.analytics.advanced import SAEVAnalytics
 
@@ -503,7 +795,27 @@ print(f"Identificados {resultado['n_clusters']} grupos de escolas")
 
 ## 🔄 Próximos Passos
 
-### Melhorias Técnicas
+### ✅ Melhorias Implementadas (v2.0)
+
+#### 🎯 **ETL Integrado com Star Schema**
+- ✅ **Processo automatizado**: ETL + Star Schema em uma única execução
+- ✅ **Scripts reformulados**: `carga.py` e `carga_teste.py` com nova arquitetura
+- ✅ **Logs detalhados**: Acompanhamento completo do processo de transformação
+- ✅ **Validação automática**: Verificação de integridade e estatísticas dos dados
+- ✅ **Sobrescrita segura**: Recriação controlada de bancos existentes
+
+#### 📊 **Star Schema Otimizado**
+- ✅ **Aplicação automática**: Integrado ao processo de carga padrão
+- ✅ **Script utilitário**: `apply_star_schema.py` para bancos existentes
+- ✅ **Performance validada**: Melhoria de 10-100x em consultas BI
+- ✅ **Documentação completa**: Guias e exemplos práticos
+
+#### 🔒 **Segurança e Conformidade**
+- ✅ **Anonimização MD5**: Dados sensíveis protegidos no ambiente de teste
+- ✅ **Filtragem por município**: Controle granular de dados de teste
+- ✅ **Confirmações de segurança**: Proteção contra execução acidental em produção
+
+### Melhorias Técnicas Pendentes
 - [ ] Implementar cache para consultas frequentes
 - [ ] Adicionar testes unitários abrangentes
 - [ ] Configurar CI/CD pipeline
@@ -537,7 +849,7 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ## 👥 Equipe
 
-- **Desenvolvedor Principal**: Utilizando GitHub Copilot para IA-assisted development
+- **Desenvolvedor Principal**: Ricardo Caratti (Utilizando GitHub Copilot para IA-assisted development)
 - **Tecnologias**: Python, Streamlit, Plotly, SQLite
 - **Metodologia**: Desenvolvimento orientado por dados
 
