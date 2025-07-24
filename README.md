@@ -15,7 +15,7 @@ Este projeto desenvolve uma solução completa de Business Intelligence para an�
 ### 📈 Dashboard Interativo
 - Visão geral de desempenho por município e escola
 - Análise por competências e descritores
-- Filtros dinâmicos por ano, disciplina e série
+- Filtros dinâmicos por ano, disciplina, teste e série
 - Gráficos interativos com Plotly
 
 ### 📋 Sistema de Relatórios
@@ -318,6 +318,8 @@ CREATE INDEX idx_escola ON avaliacao(ESC_INEP);
 CREATE INDEX idx_avaliacao_ano ON avaliacao(AVA_ANO);
 CREATE INDEX idx_disciplina ON avaliacao(DIS_NOME);
 CREATE INDEX idx_serie ON avaliacao(SER_NUMBER);
+CREATE INDEX idx_serie_nome ON avaliacao(SER_NOME);
+CREATE INDEX idx_teste_nome ON avaliacao(TES_NOME);
 ```
 
 ## 📈 Exemplos de Uso

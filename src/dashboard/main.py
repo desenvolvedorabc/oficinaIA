@@ -109,13 +109,32 @@ class SAEVDashboard:
             
             selected_discipline = st.sidebar.selectbox("Disciplina", disciplines['DIS_NOME'].tolist())
             
+            # Filtro de teste (nome do teste)
+            tests_query = f"SELECT DISTINCT TES_NOME FROM avaliacao WHERE DIS_NOME = '{selected_discipline}' ORDER BY TES_NOME"
+            tests = self.get_data(tests_query)
+            if tests.empty:
+                st.sidebar.error("❌ Nenhum teste encontrado para esta disciplina")
+                return None
+            
+            selected_test = st.sidebar.selectbox("Nome do Teste", tests['TES_NOME'].tolist())
+            
             # Filtro de série
             series = self.get_data("SELECT DISTINCT SER_NOME FROM avaliacao ORDER BY SER_NUMBER")
-            selected_series = st.sidebar.multiselect("Série", series['SER_NOME'].tolist() if not series.empty else [])
+            series_list = series['SER_NOME'].tolist() if not series.empty else []
+            
+            # Definir valor padrão para 1º Ano
+            default_series = []
+            if "1º Ano EF" in series_list:
+                default_series = ["1º Ano EF"]
+            elif series_list:  # Se não tiver 1º Ano EF, usar o primeiro da lista
+                default_series = [series_list[0]]
+            
+            selected_series = st.sidebar.multiselect("Série", series_list, default=default_series)
             
             return {
                 'year': selected_year,
                 'discipline': selected_discipline,
+                'test': selected_test,
                 'series': selected_series
             }
         except Exception as e:
@@ -127,7 +146,7 @@ class SAEVDashboard:
         st.header("📈 Visão Geral do Desempenho")
         
         # Query base com filtros
-        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}'"
+        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}' AND TES_NOME = '{filters['test']}'"
         if filters['series']:
             series_list = "','".join(filters['series'])
             where_clause += f" AND SER_NOME IN ('{series_list}')"
@@ -157,7 +176,7 @@ class SAEVDashboard:
         """Desempenho por município"""
         st.header("🏘️ Desempenho por Município")
         
-        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}'"
+        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}' AND TES_NOME = '{filters['test']}'"
         if filters['series']:
             series_list = "','".join(filters['series'])
             where_clause += f" AND SER_NOME IN ('{series_list}')"
@@ -197,7 +216,7 @@ class SAEVDashboard:
         """Desempenho por escola"""
         st.header("🏫 Desempenho por Escola")
         
-        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}'"
+        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}' AND TES_NOME = '{filters['test']}'"
         if filters['series']:
             series_list = "','".join(filters['series'])
             where_clause += f" AND SER_NOME IN ('{series_list}')"
@@ -241,7 +260,7 @@ class SAEVDashboard:
         """Análise por competências (descritores)"""
         st.header("🎯 Análise por Competências")
         
-        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}'"
+        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}' AND TES_NOME = '{filters['test']}'"
         if filters['series']:
             series_list = "','".join(filters['series'])
             where_clause += f" AND SER_NOME IN ('{series_list}')"
