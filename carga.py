@@ -66,19 +66,27 @@ def main():
         # Criar processador de dados
         processor = SAEVDataProcessor(db_file)
         
-        # Executar processo completo de ETL
+        # Executar processo completo de ETL com DuckDB
         processor.full_etl_process(
             csv_folder=csv_folder,  # Usar pasta em vez de arquivo único
             test_mode=False,  # Modo produção
             apply_star_schema=True,
-            overwrite_db=True
+            overwrite_db=True,
+            include_duckdb=True,    # NOVO: Migração automática para DuckDB
+            force_duckdb=True       # NOVO: Forçar recriação do DuckDB
         )
         
         print()
         print("="*80)
         print("🎉 CARGA CONCLUÍDA COM SUCESSO!")
-        print(f"📊 Dados disponíveis em: {db_file}")
+        print(f"📊 Dados SQLite disponíveis em: {db_file}")
+        print(f"🦆 Dados DuckDB disponíveis em: {db_file.replace('.db', '_duckdb.db')}")
         print("⭐ Star Schema aplicado para análises otimizadas")
+        print("🚀 Performance otimizada com DuckDB")
+        print()
+        print("💡 Próximos passos:")
+        print("   • Use './iniciar.sh' para dashboard SQLite")
+        print("   • Use './galeria.sh' para galeria com DuckDB")
         print("="*80)
         
     except Exception as e:

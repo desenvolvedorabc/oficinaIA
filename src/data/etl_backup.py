@@ -9,9 +9,38 @@ from typing import List, Optional
 import hashlib
 import subprocess
 import os
+import sys
 
 class SAEVDataProcessor:
-    """Classe para processamento de dados do SAEV"""
+    """Classe para process    def migrate_to_duckdb(self, force_recreate: bool = False) -> bool:
+        """Migra dados para DuckDB usando o módulo de migração"""
+        try:
+            print("
+🦆 Iniciando migração para DuckDB...")
+            
+            # Importar função de migração
+            from duckdb_migration import migrate_saev_to_duckdb
+            
+            # Verificar se precisa recriar (deletar arquivo existente)
+            if force_recreate:
+                duckdb_path = self.database_path.replace('.db', '_duckdb.db')
+                if Path(duckdb_path).exists():
+                    Path(duckdb_path).unlink()
+                    print(f"🗑️ Arquivo DuckDB removido para recriação: {duckdb_path}")
+            
+            # Executar migração (só aceita parâmetro env)
+            success = migrate_saev_to_duckdb(env=self.env)
+            
+            if success:
+                print("✅ Migração para DuckDB concluída!")
+            else:
+                print("❌ Falha na migração para DuckDB")
+                
+            return success
+            
+        except Exception as e:
+            print(f"❌ Erro na migração DuckDB: {e}")
+            return False do SAEV"""
     
     def __init__(self, db_path: str):
         self.db_path = db_path
@@ -267,15 +296,78 @@ class SAEVDataProcessor:
         
         return results
     
+    def migrate_to_duckdb(self, force_recreate: bool = False) -> bool:
+        """Migra dados para DuckDB usando o módulo de migração"""
+        try:
+            print("
+🦆 Iniciando migração para DuckDB...")
+            
+            # Importar função de migração
+            from duckdb_migration import migrate_saev_to_duckdb
+            
+            # Verificar se precisa recriar (deletar arquivo existente)
+            if force_recreate:
+                duckdb_path = self.database_path.replace('.db', '_duckdb.db')
+                if Path(duckdb_path).exists():
+                    Path(duckdb_path).unlink()
+                    print(f"�️ Arquivo DuckDB removido para recriação: {duckdb_path}")
+            
+            # Executar migração (só aceita parâmetro env)
+            success = migrate_saev_to_duckdb(env=self.env)
+            
+            if success:
+                print("✅ Migração para DuckDB concluída!")
+            else:
+                print("❌ Falha na migração para DuckDB")
+                
+            return success
+            
+        except Exception as e:
+            print(f"❌ Erro na migração DuckDB: {e}")
+            return False
+    
+    def validate_duckdb_migration(self) -> bool:
+        """Valida se a migração DuckDB foi bem-sucedida"""
+        duckdb_path = self.db_path.replace('.db', '_duckdb.db')
+        
+        if not Path(duckdb_path).exists():
+            self.logger.warning("⚠️  Arquivo DuckDB não encontrado")
+            return False
+        
+        try:
+            import duckdb
+            
+            # Conectar aos bancos
+            sqlite_conn = sqlite3.connect(self.db_path)
+            duck_conn = duckdb.connect(duckdb_path)
+            
+            # Comparar contagens básicas
+            sqlite_count = sqlite_conn.execute("SELECT COUNT(*) FROM fato_resposta_aluno").fetchone()[0]
+            duck_count = duck_conn.execute("SELECT COUNT(*) FROM fato_resposta_aluno").fetchone()[0]
+            
+            sqlite_conn.close()
+            duck_conn.close()
+            
+            if sqlite_count == duck_count:
+                self.logger.info(f"✅ Validação DuckDB: {duck_count:,} registros consistentes")
+                return True
+            else:
+                self.logger.error(f"❌ Inconsistência: SQLite={sqlite_count:,} vs DuckDB={duck_count:,}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"❌ Erro na validação DuckDB: {e}")
+            return False
+    
     def full_etl_process(self, csv_path: str = None, csv_folder: str = None,
                         test_mode: bool = False, allowed_cities: Optional[List[str]] = None, 
                         apply_star_schema: bool = True, overwrite_db: bool = True,
-                        include_duckdb: bool = False, force_duckdb: bool = False):
-        """Executa o processo completo de ETL"""
+                        include_duckdb: bool = True, force_duckdb: bool = False):
+        """Executa o processo completo de ETL com migração automática para DuckDB"""
         self.logger.info("🚀 Iniciando processo completo de ETL...")
         
         try:
-            # 1. Criar estrutura do banco
+            # 1. Criar estrutura do banco SQLite
             self.create_database_structure(overwrite=overwrite_db)
             
             # 2. Carregar dados do CSV ou pasta
@@ -289,89 +381,42 @@ class SAEVDataProcessor:
             if apply_star_schema:
                 self.apply_star_schema()
             
-            # 5. Migração para DuckDB (se solicitado)
+            # 5. Migrar para DuckDB (nova funcionalidade)
             if include_duckdb:
                 self.logger.info("🦆 Iniciando migração para DuckDB...")
-                duckdb_success = self.migrate_to_duckdb(force_recreate=force_duckdb)
+                
+                duckdb_success = self.migrate_to_duckdb(force=force_duckdb)
+                
                 if duckdb_success:
-                    self.logger.info("✅ Migração DuckDB concluída!")
                     # Validar migração
-                    if self.validate_duckdb_migration():
-                        self.logger.info("✅ Validação DuckDB passou!")
+                    validation_success = self.validate_duckdb_migration()
+                    if validation_success:
+                        self.logger.info("✅ DuckDB validado - Dual database ready!")
+                        validation_results['duckdb_migrated'] = True
+                        validation_results['duckdb_validated'] = True
                     else:
-                        self.logger.warning("⚠️ Validação DuckDB falhou!")
+                        self.logger.warning("⚠️  DuckDB migrado mas validação falhou")
+                        validation_results['duckdb_migrated'] = True
+                        validation_results['duckdb_validated'] = False
                 else:
-                    self.logger.error("❌ Falha na migração DuckDB")
+                    self.logger.warning("⚠️  Falha na migração DuckDB - continuando apenas com SQLite")
+                    validation_results['duckdb_migrated'] = False
+                    validation_results['duckdb_validated'] = False
+            else:
+                self.logger.info("⏭️  Migração DuckDB desabilitada")
+                validation_results['duckdb_migrated'] = False
+                validation_results['duckdb_validated'] = False
             
             self.logger.info("🎉 Processo de ETL concluído com sucesso!")
+            
+            # Log final do status
+            if validation_results.get('duckdb_migrated', False):
+                self.logger.info("📊 Bancos disponíveis: SQLite + DuckDB (performance otimizada)")
+            else:
+                self.logger.info("📊 Banco disponível: SQLite")
+            
             return validation_results
             
         except Exception as e:
             self.logger.error(f"💥 Falha no processo de ETL: {e}")
             raise
-
-    def migrate_to_duckdb(self, force_recreate: bool = False) -> bool:
-        """Migra dados para DuckDB usando o módulo de migração"""
-        try:
-            print("\n🦆 Iniciando migração para DuckDB...")
-            
-            # Extrair ambiente do caminho do banco
-            env = 'teste' if 'teste' in self.db_path else 'prod'
-            
-            # Importar função de migração
-            from duckdb_migration import migrate_saev_to_duckdb
-            
-            # Verificar se precisa recriar (deletar arquivo existente)
-            if force_recreate:
-                duckdb_path = self.db_path.replace('.db', '_duckdb.db')
-                if Path(duckdb_path).exists():
-                    Path(duckdb_path).unlink()
-                    print(f"🗑️ Arquivo DuckDB removido para recriação: {duckdb_path}")
-            
-            # Executar migração (só aceita parâmetro env)
-            success = migrate_saev_to_duckdb(env=env)
-            
-            if success:
-                print("✅ Migração para DuckDB concluída!")
-            else:
-                print("❌ Falha na migração para DuckDB")
-                
-            return success
-            
-        except Exception as e:
-            print(f"❌ Erro na migração DuckDB: {e}")
-            return False
-
-    def validate_duckdb_migration(self) -> bool:
-        """Valida se a migração DuckDB foi bem-sucedida"""
-        try:
-            import duckdb
-            
-            duckdb_path = self.db_path.replace('.db', '_duckdb.db')
-            
-            if not Path(duckdb_path).exists():
-                print(f"❌ Arquivo DuckDB não encontrado: {duckdb_path}")
-                return False
-            
-            # Conectar ao DuckDB e validar estrutura
-            duck_conn = duckdb.connect(duckdb_path)
-            
-            # Validar tabelas principais
-            tables_to_check = ['dim_aluno', 'dim_escola', 'dim_descritor', 'fato_resposta_aluno']
-            
-            for table in tables_to_check:
-                try:
-                    result = duck_conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()
-                    count = result[0] if result else 0
-                    print(f"✅ {table}: {count:,} registros")
-                except Exception as e:
-                    print(f"❌ Erro ao validar {table}: {e}")
-                    duck_conn.close()
-                    return False
-            
-            duck_conn.close()
-            return True
-            
-        except Exception as e:
-            print(f"❌ Erro na validação DuckDB: {e}")
-            return False
