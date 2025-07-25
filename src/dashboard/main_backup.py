@@ -75,7 +75,6 @@ class SAEVStarSchemaDashboard:
             
         except Exception:
             return False
-
     def _show_environment_info(self):
         """Mostra informações do ambiente atual na sidebar"""
         try:
@@ -334,7 +333,7 @@ class SAEVStarSchemaDashboard:
                 color_continuous_scale='RdYlGn',
                 hover_data=['total_alunos', 'total_escolas']
             )
-            fig.update_layout(xaxis_tickangle=45)
+            fig.update_xaxis(tickangle=45)
             st.plotly_chart(fig, use_container_width=True)
             
             # Tabela detalhada
@@ -443,6 +442,154 @@ class SAEVStarSchemaDashboard:
             st.subheader("🏆 Competências com Melhor Desempenho")
             best_competencies = df.tail(5)[['MTI_CODIGO', 'MTI_DESCRITOR', 'taxa_acerto', 'alunos_avaliados']]
             st.dataframe(best_competencies, use_container_width=True)
+            series_list = "','".join(filters['series'])
+            where_clause += f" AND SER_NOME IN ('{series_list}')"
+        
+        # Métricas gerais
+        metrics_query = f"""
+        SELECT 
+            COUNT(DISTINCT ALU_ID) as total_alunos,
+            COUNT(DISTINCT ESC_INEP) as total_escolas,
+            COUNT(DISTINCT MUN_NOME) as total_municipios,
+            ROUND(AVG(CAST(ATR_CERTO AS FLOAT)) * 100, 2) as taxa_acerto
+        FROM avaliacao {where_clause}
+        """
+        metrics = self.get_data(metrics_query).iloc[0]
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("👥 Total de Alunos", f"{metrics['total_alunos']:,}")
+        with col2:
+            st.metric("🏫 Total de Escolas", f"{metrics['total_escolas']:,}")
+        with col3:
+            st.metric("🏘️ Total de Municípios", f"{metrics['total_municipios']:,}")
+        with col4:
+            st.metric("✅ Taxa de Acerto Geral", f"{metrics['taxa_acerto']}%")
+    
+    def performance_by_municipality(self, filters):
+        """Desempenho por município"""
+        st.header("🏘️ Desempenho por Município")
+        
+        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}' AND TES_NOME = '{filters['test']}'"
+        if filters['series']:
+            series_list = "','".join(filters['series'])
+            where_clause += f" AND SER_NOME IN ('{series_list}')"
+        
+        query = f"""
+        SELECT 
+            MUN_NOME,
+            COUNT(DISTINCT ALU_ID) as total_alunos,
+            ROUND(AVG(CAST(ATR_CERTO AS FLOAT)) * 100, 2) as taxa_acerto
+        FROM avaliacao {where_clause}
+        GROUP BY MUN_NOME
+        ORDER BY taxa_acerto DESC
+        """
+        
+        df = self.get_data(query)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Gráfico de barras
+            fig = px.bar(
+                df, 
+                x='MUN_NOME', 
+                y='taxa_acerto',
+                title='Taxa de Acerto por Município',
+                labels={'taxa_acerto': 'Taxa de Acerto (%)', 'MUN_NOME': 'Município'}
+            )
+            fig.update_layout(xaxis_tickangle=-45)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            # Tabela com dados
+            st.subheader("📊 Dados Detalhados")
+            st.dataframe(df, use_container_width=True)
+    
+    def performance_by_school(self, filters):
+        """Desempenho por escola"""
+        st.header("🏫 Desempenho por Escola")
+        
+        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}' AND TES_NOME = '{filters['test']}'"
+        if filters['series']:
+            series_list = "','".join(filters['series'])
+            where_clause += f" AND SER_NOME IN ('{series_list}')"
+        
+        query = f"""
+        SELECT 
+            MUN_NOME,
+            ESC_NOME,
+            COUNT(DISTINCT ALU_ID) as total_alunos,
+            ROUND(AVG(CAST(ATR_CERTO AS FLOAT)) * 100, 2) as taxa_acerto
+        FROM avaliacao {where_clause}
+        GROUP BY MUN_NOME, ESC_NOME
+        HAVING total_alunos >= 10
+        ORDER BY taxa_acerto DESC
+        """
+        
+        df = self.get_data(query)
+        
+        # Scatter plot
+        fig = px.scatter(
+            df, 
+            x='total_alunos', 
+            y='taxa_acerto',
+            color='MUN_NOME',
+            title='Taxa de Acerto vs Número de Alunos por Escola',
+            labels={
+                'total_alunos': 'Número de Alunos',
+                'taxa_acerto': 'Taxa de Acerto (%)',
+                'MUN_NOME': 'Município'
+            },
+            hover_data=['ESC_NOME']
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Top 10 escolas
+        st.subheader("🏆 Top 10 Escolas por Taxa de Acerto")
+        top_schools = df.head(10)[['MUN_NOME', 'ESC_NOME', 'total_alunos', 'taxa_acerto']]
+        st.dataframe(top_schools, use_container_width=True)
+    
+    def competency_analysis(self, filters):
+        """Análise por competências (descritores)"""
+        st.header("🎯 Análise por Competências")
+        
+        where_clause = f"WHERE AVA_ANO = {filters['year']} AND DIS_NOME = '{filters['discipline']}' AND TES_NOME = '{filters['test']}'"
+        if filters['series']:
+            series_list = "','".join(filters['series'])
+            where_clause += f" AND SER_NOME IN ('{series_list}')"
+        
+        query = f"""
+        SELECT 
+            MTI_CODIGO,
+            MTI_DESCRITOR,
+            COUNT(*) as total_questoes,
+            ROUND(AVG(CAST(ATR_CERTO AS FLOAT)) * 100, 2) as taxa_acerto
+        FROM avaliacao {where_clause}
+        GROUP BY MTI_CODIGO, MTI_DESCRITOR
+        ORDER BY taxa_acerto ASC
+        """
+        
+        df = self.get_data(query)
+        
+        # Gráfico horizontal das competências
+        fig = px.bar(
+            df, 
+            x='taxa_acerto', 
+            y='MTI_CODIGO',
+            orientation='h',
+            title='Taxa de Acerto por Competência (Descritor)',
+            labels={'taxa_acerto': 'Taxa de Acerto (%)', 'MTI_CODIGO': 'Código do Descritor'},
+            color='taxa_acerto',
+            color_continuous_scale='RdYlGn'
+        )
+        fig.update_layout(height=600)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Competências com menor desempenho
+        st.subheader("⚠️ Competências que Necessitam Atenção")
+        worst_competencies = df.head(5)[['MTI_CODIGO', 'MTI_DESCRITOR', 'taxa_acerto']]
+        st.dataframe(worst_competencies, use_container_width=True)
 
 def main():
     st.title("⭐ Dashboard SAEV - Star Schema")

@@ -334,7 +334,7 @@ class SAEVStarSchemaDashboard:
                 color_continuous_scale='RdYlGn',
                 hover_data=['total_alunos', 'total_escolas']
             )
-            fig.update_layout(xaxis_tickangle=45)
+            fig.update_xaxis(tickangle=45)
             st.plotly_chart(fig, use_container_width=True)
             
             # Tabela detalhada

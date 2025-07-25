@@ -193,6 +193,11 @@ GROUP BY
     TUR_PERIODO, TUR_NOME, ALU_ID, AVA_NOME, AVA_ANO, 
     DIS_NOME, TES_NOME, MTI_CODIGO;
 
+create index idx_fato_resposta_aluno ON fato_resposta_aluno (AVA_ANO,MUN_UF, MUN_NOME, ESC_INEP, DIS_NOME);
+
+.print "📊 Tabela fato_resposta_aluno criada com agregações de métricas!"
+
+
 SELECT COUNT(*) FROM fato_resposta_aluno;
 .print "✅ Tabela fato_resposta_aluno criada e populada com sucesso!"
 
@@ -202,7 +207,7 @@ SELECT COUNT(*) FROM fato_resposta_aluno;
 .print "🚀 Finalizando otimização..."
 
 -- Comentado para preservar dados originais durante desenvolvimento
--- DROP TABLE avaliacao;
+DROP TABLE avaliacao;
 
 .print "🎉 Otimização de tabelas concluída - STAR SCHEMA criado com sucesso!"
 .print ""
