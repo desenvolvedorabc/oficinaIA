@@ -1,3 +1,4 @@
+*.pyc
 *.csv
 avaliacao_prod.db
 **/avaliacao_prod.db
@@ -68,3 +69,4 @@ data/raw/es_7_serie.csv
 data/raw/es_8_serie.csv
 data/raw/es_9_serie.csv
 db/avaliacao_prod.db
+__pycache__/duckdb_migration.cpython-311.pyc
