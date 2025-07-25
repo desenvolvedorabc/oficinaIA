@@ -311,25 +311,24 @@ class SAEVDataProcessor:
             raise
 
     def migrate_to_duckdb(self, force_recreate: bool = False) -> bool:
-        """Migra dados para DuckDB usando o módulo de migração"""
+        """Migra dados para DuckDB usando o módulo de migração diretamente"""
         try:
             print("\n🦆 Iniciando migração para DuckDB...")
             
-            # Extrair ambiente do caminho do banco
-            env = 'teste' if 'teste' in self.db_path else 'prod'
-            
-            # Importar função de migração
-            from duckdb_migration import migrate_saev_to_duckdb
+            # Usar o próprio caminho do banco atual
+            duckdb_path = self.db_path.replace('.db', '_duckdb.db')
             
             # Verificar se precisa recriar (deletar arquivo existente)
-            if force_recreate:
-                duckdb_path = self.db_path.replace('.db', '_duckdb.db')
-                if Path(duckdb_path).exists():
-                    Path(duckdb_path).unlink()
-                    print(f"🗑️ Arquivo DuckDB removido para recriação: {duckdb_path}")
+            if force_recreate and Path(duckdb_path).exists():
+                Path(duckdb_path).unlink()
+                print(f"🗑️ Arquivo DuckDB removido para recriação: {duckdb_path}")
             
-            # Executar migração (só aceita parâmetro env)
-            success = migrate_saev_to_duckdb(env=env)
+            # Usar DuckDBMigrator diretamente em vez da função wrapper
+            from duckdb_migration import DuckDBMigrator
+            
+            # Executar migração direta
+            migrator = DuckDBMigrator(self.db_path, duckdb_path)
+            success = migrator.migrate_to_duckdb()
             
             if success:
                 print("✅ Migração para DuckDB concluída!")

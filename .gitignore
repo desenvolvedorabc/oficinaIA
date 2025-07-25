@@ -3,4 +3,68 @@ avaliacao_prod.db
 **/avaliacao_prod.db
 avaliacao_prod_duckdb.db
 **/avaliacao_prod_duckdb.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+**/*.sqlite
+*.sqlite3
+**/*.sqlite3
+*.log
+**/*.log
+*.tmp
+**/*.tmp
+*.bak
+**/*.bak
 
+# Arquivos de dados que podem ficar grandes
+*.parquet
+*.arrow
+*.feather
+*.h5
+*.hdf5
+*.xlsx
+*.xls
+*.json.gz
+*.csv.gz
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# Arquivos de backup e temporários grandes
+*_backup.*
+*_bkp.*
+backup_*
+*.dump
+*.dmp
+*.backup
+
+# Arquivos de modelos e dados científicos
+*.model
+*.pkl
+*.pickle
+*.joblib
+*.npy
+*.npz
+
+# Diretórios que podem conter arquivos grandes
+/data/processed/
+/data/interim/
+/exports/
+/backups/
+/temp/
+/cache/
+
+
+# Arquivos grandes detectados automaticamente
+data/raw/es_1_serie.csv
+data/raw/es_2_serie.csv
+data/raw/es_3_serie.csv
+data/raw/es_4_serie.csv
+data/raw/es_5_serie.csv
+data/raw/es_6_serie.csv
+data/raw/es_7_serie.csv
+data/raw/es_8_serie.csv
+data/raw/es_9_serie.csv
+db/avaliacao_prod.db

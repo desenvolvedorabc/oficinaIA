@@ -137,3 +137,92 @@ Para problemas ou dúvidas:
 2. Execute `python manage_env.py status` para diagnóstico
 3. Verifique logs de erro exibidos pelos scripts
 4. Consulte a documentação principal no README.md
+
+---
+
+# 🔧 SCRIPTS DE GERENCIAMENTO DE ARQUIVOS GRANDES
+
+## 📋 **SCRIPTS DISPONÍVEIS:**
+
+### 1️⃣ **find-large-files.py**
+**Função**: Encontra arquivos maiores que um limite específico
+
+**Uso**:
+```bash
+# Encontrar arquivos > 30MB (padrão)
+python scripts/find-large-files.py
+
+# Encontrar arquivos > 100MB
+python scripts/find-large-files.py 100
+```
+
+### 2️⃣ **auto-gitignore.py** 
+**Função**: Automaticamente adiciona arquivos grandes ao .gitignore
+
+**Uso**:
+```bash
+# Adicionar arquivos > 30MB ao .gitignore
+python scripts/auto-gitignore.py
+
+# Adicionar arquivos > 50MB ao .gitignore  
+python scripts/auto-gitignore.py 50
+```
+
+### 3️⃣ **check-large-files.sh**
+**Função**: Pre-commit hook que impede commit de arquivos grandes
+
+**Instalação**:
+```bash
+# Copiar para hooks do git
+cp scripts/check-large-files.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+## 🎯 **SOLUÇÃO PARA ARQUIVOS > 30MB:**
+
+### ❌ **Limitação do .gitignore**:
+- `.gitignore` NÃO pode filtrar por tamanho
+- Funciona apenas com padrões de nome/caminho
+
+### ✅ **SOLUÇÕES IMPLEMENTADAS**:
+
+1. **Script Automático** (Recomendado):
+   ```bash
+   python scripts/auto-gitignore.py
+   git add .gitignore
+   git commit -m "Update .gitignore with large files"
+   ```
+
+2. **Pre-commit Hook** (Prevenção):
+   ```bash
+   cp scripts/check-large-files.sh .git/hooks/pre-commit
+   chmod +x .git/hooks/pre-commit
+   ```
+
+3. **Git LFS** (Para tipos específicos):
+   ```bash
+   git lfs track "*.csv"  # Arquivos CSV via LFS
+   git add .gitattributes
+   ```
+
+## 📊 **RESULTADO IMPLEMENTADO:**
+
+- ✅ **26GB** de arquivos grandes adicionados ao .gitignore
+- ✅ **10 arquivos CSV** + **1 banco grande** ignorados
+- ✅ **Padrões abrangentes** para tipos comuns
+
+## 🚀 **FLUXO RECOMENDADO:**
+
+```bash
+# 1. Executar sempre antes de commit
+python scripts/auto-gitignore.py
+
+# 2. Verificar o que será commitado
+git status
+
+# 3. Adicionar apenas arquivos pequenos
+git add .gitignore
+git commit -m "Update gitignore"
+```
+
+*Scripts criados para gerenciar automaticamente arquivos grandes no repositório* 🎯
