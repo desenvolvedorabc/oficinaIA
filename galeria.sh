@@ -59,13 +59,13 @@ else
 fi
 
 # Verificar bancos DuckDB
-if [ -f "db/avaliacao_teste_duckdb.db" ]; then
+if [ -f "db/avaliacao_teste.duckdb" ]; then
     TESTE_DUCKDB_STATUS="${CYAN}✅ DuckDB${NC}"
 else
     TESTE_DUCKDB_STATUS="${RED}❌ DuckDB${NC}"
 fi
 
-if [ -f "db/avaliacao_prod_duckdb.db" ]; then
+if [ -f "db/avaliacao_prod.duckdb" ]; then
     PROD_DUCKDB_STATUS="${CYAN}✅ DuckDB${NC}"
 else
     PROD_DUCKDB_STATUS="${RED}❌ DuckDB${NC}"
@@ -109,7 +109,7 @@ case $opcao in
         echo -e "${GREEN}✨ Performance otimizada para análises complexas${NC}"
         echo ""
         if [ -f "run_gallery_duckdb.py" ]; then
-            if [ -f "db/avaliacao_teste_duckdb.db" ]; then
+            if [ -f "db/avaliacao_teste.duckdb" ]; then
                 echo -e "${BLUE}🔗 URL: http://localhost:8504${NC}"
                 echo -e "${YELLOW}💡 Abrindo navegador automaticamente...${NC}"
                 echo ""
@@ -180,7 +180,7 @@ case $opcao in
         read -p "Confirma inicialização em PRODUÇÃO? (s/N): " confirm
         if [[ $confirm =~ ^[Ss]$ ]]; then
             if [ -f "run_gallery_duckdb.py" ]; then
-                if [ -f "db/avaliacao_prod_duckdb.db" ]; then
+                if [ -f "db/avaliacao_prod.duckdb" ]; then
                     echo -e "${BLUE}🔗 URL: http://localhost:8505${NC}"
                     echo -e "${YELLOW}💡 Abrindo navegador automaticamente...${NC}"
                     echo ""
@@ -272,13 +272,13 @@ case $opcao in
             $PYTHON_CMD manage_env.py status
             echo ""
             echo -e "${CYAN}🦆 Status DuckDB:${NC}"
-            if [ -f "db/avaliacao_teste_duckdb.db" ]; then
-                echo -e "   🧪 Teste: ${GREEN}✅ Disponível${NC} ($(du -h db/avaliacao_teste_duckdb.db | cut -f1))"
+            if [ -f "db/avaliacao_teste.duckdb" ]; then
+                echo -e "   🧪 Teste: ${GREEN}✅ Disponível${NC} ($(du -h db/avaliacao_teste.duckdb | cut -f1))"
             else
                 echo -e "   🧪 Teste: ${RED}❌ Não encontrado${NC}"
             fi
-            if [ -f "db/avaliacao_prod_duckdb.db" ]; then
-                echo -e "   🔴 Prod:  ${GREEN}✅ Disponível${NC} ($(du -h db/avaliacao_prod_duckdb.db | cut -f1))"
+            if [ -f "db/avaliacao_prod.duckdb" ]; then
+                echo -e "   🔴 Prod:  ${GREEN}✅ Disponível${NC} ($(du -h db/avaliacao_prod.duckdb | cut -f1))"
             else
                 echo -e "   🔴 Prod:  ${RED}❌ Não encontrado${NC}"
             fi
