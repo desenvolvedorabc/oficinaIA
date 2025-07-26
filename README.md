@@ -2,7 +2,33 @@
 
 Este projeto desenvolve uma solução completa de Business Intelligence para análise de dados de avaliações diagnósticas aplicadas em escolas da rede municipal e estadual, utilizando tecnologias modernas e inteligência artificial.
 
-## 🎯 Objetivos do Projeto
+## � **Oficina de IA - Configuração para Windows**
+
+**👨‍🏫 Participantes da oficina**: Consultem os arquivos específicos para Windows:
+- 📖 **[INSTALACAO_WINDOWS.md](INSTALACAO_WINDOWS.md)** - Guia completo de instalação
+- 🚀 **[README_OFICINA.md](README_OFICINA.md)** - Guia da oficina e exercícios
+- 🔍 **`verificar_ambiente.bat`** - Script de verificação do ambiente
+- 🖼️ **`galeria.bat`** - Launcher para Windows (substitui `galeria.sh`)
+
+**⚡ Início rápido para Windows:**
+```cmd
+# 1. Verificar ambiente
+verificar_ambiente.bat
+
+# 2. Instalar dependências
+pip install -r requirements_oficina.txt
+
+# 3. Processar dados
+python carga_teste.py
+python duckdb_migration.py migrate teste
+
+# 4. Iniciar dashboard
+galeria.bat
+```
+
+---
+
+## �🎯 Objetivos do Projeto
 
 - **Visualização Interativa**: Dashboards dinâmicos para análise de desempenho educacional
 - **Relatórios Automatizados**: Geração de relatórios detalhados em Excel
