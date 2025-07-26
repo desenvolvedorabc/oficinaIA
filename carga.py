@@ -80,7 +80,7 @@ def main():
         print("="*80)
         print("🎉 CARGA CONCLUÍDA COM SUCESSO!")
         print(f"📊 Dados SQLite disponíveis em: {db_file}")
-        print(f"🦆 Dados DuckDB disponíveis em: {db_file.replace('.db', '_duckdb.db')}")
+        print(f"🦆 Dados DuckDB disponíveis em: {db_file.replace('.db', '.duckdb')}")
         print("⭐ Star Schema aplicado para análises otimizadas")
         print("🚀 Performance otimizada com DuckDB")
         print()

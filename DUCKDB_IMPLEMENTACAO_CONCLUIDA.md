@@ -26,7 +26,7 @@ python carga_teste.py cidade_teste.txt
 # Ambiente de produção (dados completos)  
 python carga.py
 ```
-**Resultado**: Gera ambos `avaliacao_teste.db` (SQLite) + `avaliacao_teste_duckdb.db` (DuckDB)
+**Resultado**: Gera ambos `avaliacao_teste.db` (SQLite) + `avaliacao_teste.duckdb` (DuckDB)
 
 ### 2️⃣ **ETL Apenas SQLite (Compatibilidade)**
 Se por algum motivo precisar apenas SQLite, editar arquivos:

@@ -57,7 +57,7 @@
 ================================================================================
 🎉 CARGA CONCLUÍDA COM SUCESSO!
 📊 Dados SQLite disponíveis em: db/teste_final_prod.db
-🦆 Dados DuckDB disponíveis em: db/teste_final_prod_duckdb.db
+🦆 Dados DuckDB disponíveis em: db/teste_final_prod.duckdb
 ⭐ Star Schema aplicado para análises otimizadas
 🚀 Performance otimizada com DuckDB
 ================================================================================

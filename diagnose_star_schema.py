@@ -148,7 +148,7 @@ def main():
                 print(f"⚠️ SQLite não encontrado: {sqlite_path}")
             
             # DuckDB
-            duckdb_path = sqlite_path.replace('.db', '_duckdb.db')
+            duckdb_path = sqlite_path.replace('.db', '.duckdb')
             if Path(duckdb_path).exists():
                 print("\n" + "-" * 20)
                 diagnose_database(duckdb_path, 'duckdb')

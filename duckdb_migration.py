@@ -198,7 +198,7 @@ def migrate_saev_to_duckdb(env: str = 'teste') -> bool:
     try:
         # Paths dos bancos
         sqlite_path = config.get_database_path(env)
-        duckdb_path = sqlite_path.replace('.db', '_duckdb.db')
+        duckdb_path = sqlite_path.replace('.db', '.duckdb')
         
         if not Path(sqlite_path).exists():
             print(f"❌ Banco SQLite não encontrado: {sqlite_path}")
@@ -224,7 +224,7 @@ def benchmark_comparison(env: str = 'teste'):
     from src.config import config
     
     sqlite_path = config.get_database_path(env)
-    duckdb_path = sqlite_path.replace('.db', '_duckdb.db')
+    duckdb_path = sqlite_path.replace('.db', '.duckdb')
     
     if not Path(duckdb_path).exists():
         print("❌ Execute a migração primeiro: migrate_saev_to_duckdb()")

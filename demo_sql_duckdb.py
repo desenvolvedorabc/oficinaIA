@@ -22,7 +22,7 @@ def connect_to_databases():
     try:
         # Banco de teste (menor para demonstração)
         sqlite_path = config.get_database_path('teste')
-        duckdb_path = sqlite_path.replace('.db', '_duckdb.db')
+        duckdb_path = sqlite_path.replace('.db', '.duckdb')
         
         if not Path(sqlite_path).exists():
             print("❌ Execute primeiro: python carga_teste.py")

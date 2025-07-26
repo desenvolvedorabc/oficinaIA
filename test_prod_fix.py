@@ -50,7 +50,7 @@ def main():
         
         # Verificar arquivos gerados
         sqlite_path = Path(db_path)
-        duckdb_path = Path(db_path.replace('.db', '_duckdb.db'))
+        duckdb_path = Path(db_path.replace('.db', '.duckdb'))
         
         print(f"\n📁 Arquivos gerados:")
         if sqlite_path.exists():

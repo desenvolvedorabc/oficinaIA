@@ -37,7 +37,7 @@ def demo_etl_completo():
     processor = SAEVDataProcessor(db_path)
     
     print(f"📊 Banco SQLite: {db_path}")
-    print(f"🦆 Banco DuckDB: {db_path.replace('.db', '_duckdb.db')}")
+    print(f"🦆 Banco DuckDB: {db_path.replace('.db', '.duckdb')}")
     print()
     
     try:
@@ -78,7 +78,7 @@ def demo_etl_completo():
         
         # Mostrar tamanhos dos arquivos
         sqlite_path = Path(db_path)
-        duckdb_path = Path(db_path.replace('.db', '_duckdb.db'))
+        duckdb_path = Path(db_path.replace('.db', '.duckdb'))
         
         if sqlite_path.exists() and duckdb_path.exists():
             sqlite_size = sqlite_path.stat().st_size / (1024**2)

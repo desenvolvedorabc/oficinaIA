@@ -27,11 +27,9 @@ def test_new_etl():
         db_path = config.get_database_path('teste')
         processor = SAEVDataProcessor(db_path)
         
-        print(f"📊 Banco SQLite: {db_path}")
-        print(f"🦆 Banco DuckDB: {db_path.replace('.db', '_duckdb.db')}")
-        print()
-        
-        # Verificar se existem dados de teste
+    print(f"📊 Banco: {db_path}")
+    print(f"🦆 Banco DuckDB: {db_path.replace('.db', '.duckdb')}")
+    print(f"📁 CSV: {csv_file}")        # Verificar se existem dados de teste
         csv_folder = Path("data/raw")
         if not csv_folder.exists():
             print("❌ Pasta data/raw não encontrada")
@@ -85,7 +83,7 @@ def test_new_etl():
         
         # Verificar arquivos
         sqlite_path = Path(db_path)
-        duckdb_path = Path(db_path.replace('.db', '_duckdb.db'))
+        duckdb_path = Path(db_path.replace('.db', '.duckdb'))
         
         print("\n📁 ARQUIVOS GERADOS:")
         if sqlite_path.exists():

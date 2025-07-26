@@ -316,7 +316,7 @@ class SAEVDataProcessor:
             print("\n🦆 Iniciando migração para DuckDB...")
             
             # Usar o próprio caminho do banco atual
-            duckdb_path = self.db_path.replace('.db', '_duckdb.db')
+            duckdb_path = self.db_path.replace('.db', '.duckdb')
             
             # Verificar se precisa recriar (deletar arquivo existente)
             if force_recreate and Path(duckdb_path).exists():
@@ -346,7 +346,7 @@ class SAEVDataProcessor:
         try:
             import duckdb
             
-            duckdb_path = self.db_path.replace('.db', '_duckdb.db')
+            duckdb_path = self.db_path.replace('.db', '.duckdb')
             
             if not Path(duckdb_path).exists():
                 print(f"❌ Arquivo DuckDB não encontrado: {duckdb_path}")

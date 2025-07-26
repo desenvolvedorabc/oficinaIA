@@ -103,7 +103,7 @@ def main():
         print("="*80)
         print("🎉 CARGA DE TESTE CONCLUÍDA COM SUCESSO!")
         print(f"📊 Dados anonimizados disponíveis em: {db_file}")
-        print(f"🦆 Dados DuckDB disponíveis em: {db_file.replace('.db', '_duckdb.db')}")
+        print(f"🦆 Dados DuckDB disponíveis em: {db_file.replace('.db', '.duckdb')}")
         print("⭐ Star Schema aplicado para análises otimizadas")
         print("🔒 Dados sensíveis foram anonimizados com MD5")
         print("🚀 Performance otimizada com DuckDB")

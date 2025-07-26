@@ -2,8 +2,8 @@
 *.csv
 avaliacao_prod.db
 **/avaliacao_prod.db
-avaliacao_prod_duckdb.db
-**/avaliacao_prod_duckdb.db
+avaliacao_prod.duckdb
+**/avaliacao_prod.duckdb
 *.db-journal
 *.db-wal
 *.db-shm

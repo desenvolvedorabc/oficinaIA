@@ -18,7 +18,7 @@ def main():
     
     # Configuração
     db_path = "db/avaliacao_teste.db"
-    duckdb_path = db_path.replace('.db', '_duckdb.db')
+    duckdb_path = db_path.replace('.db', '.duckdb')
     
     print(f"📊 Banco SQLite: {os.path.abspath(db_path)}")
     print(f"🦆 Banco DuckDB: {os.path.abspath(duckdb_path)}")

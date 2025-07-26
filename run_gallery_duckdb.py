@@ -60,7 +60,7 @@ def setup_duckdb_environment(env_name: str = None, port: int = 8503, force_migra
     try:
         # Paths dos bancos
         sqlite_path = config.get_database_path(env_name)
-        duckdb_path = sqlite_path.replace('.db', '_duckdb.db')
+        duckdb_path = sqlite_path.replace('.db', '.duckdb')
         
         # Verificar se SQLite existe
         if not Path(sqlite_path).exists():
