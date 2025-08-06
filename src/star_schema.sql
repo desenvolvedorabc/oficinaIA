@@ -207,7 +207,7 @@ SELECT COUNT(*) FROM fato_resposta_aluno;
 .print "🚀 Finalizando otimização..."
 
 -- Comentado para preservar dados originais durante desenvolvimento
-DROP TABLE avaliacao;
+-- DROP TABLE avaliacao;
 
 .print "🎉 Otimização de tabelas concluída - STAR SCHEMA criado com sucesso!"
 .print ""
